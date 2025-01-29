@@ -16,19 +16,3 @@ class WorkingHours(Base):
 
     barber = relationship("Barber", back_populates="working_hours")
     shop = relationship("BarberShop", back_populates="working_hours")
-
-class Barber(Base):
-    __tablename__ = 'barber'
-    __table_args__ = {'extend_existing': True}
-
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
-    working_hours = relationship("WorkingHours", back_populates="barber")
-
-class BarberShop(Base):
-    __tablename__ = 'barber_shop'
-    __table_args__ = {'extend_existing': True}
-
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
-    working_hours = relationship("WorkingHours", back_populates="shop")
