@@ -6,7 +6,7 @@ from database import get_db
 from src.barber_shop.models import BarberShop
 from src.barber.models import Barber
 from src.working_hours.models import WorkingHours
-from src.working_hours.schemas import WorkingHoursCreate, WorkingHoursUpdate, Barber as BarberSchema, BarberShop as BarberShopSchema
+from src.working_hours.schemas import WorkingHoursCreate, WorkingHoursUpdate
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 

@@ -19,19 +19,3 @@ class WorkingHours(WorkingHoursBase):
 
     class Config:
         from_attributes = True
-
-class Barber(BaseModel):
-    id: int
-    name: str
-    working_hours: List[WorkingHours] = []
-
-    class Config:
-        from_attributes = True 
-
-class BarberShop(BaseModel):
-    id: int
-    name: str
-    working_hours: List[WorkingHours] = []
-
-    class Config:
-        from_attributes = True  
