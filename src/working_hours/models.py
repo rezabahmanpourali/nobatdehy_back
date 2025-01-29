@@ -2,8 +2,6 @@ from sqlalchemy.orm import relationship
 from sqlalchemy import Column, Integer, String, Time, ForeignKey
 from database import Base
 
-metadata = Base.metadata
-
 class WorkingHours(Base):
     __tablename__ = 'working_hours'
 
@@ -15,4 +13,6 @@ class WorkingHours(Base):
     shop_id = Column(Integer, ForeignKey('barber_shop.id'))
 
     barber = relationship("Barber", back_populates="working_hours")
-    shop = relationship("BarberShop", back_populates="working_hours")
+    
+    # Specify foreign key in reverse relationship
+    shop = relationship("BarberShop", back_populates="working_hours", foreign_keys=[shop_id])
