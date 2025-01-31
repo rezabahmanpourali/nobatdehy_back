@@ -9,7 +9,7 @@ from src.barber_shop.enums import BarberShopType
 
 #comment v image
 class CommentBaseSchema(BaseModel):
-    user_id: int
+    # user_id: int
     rating: float
     comment: str
     created_at: Optional[datetime] = None

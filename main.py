@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.auth.routes import router as auth_router
+from src.auth.route import router as auth_router
 from database import Base, engine
 from fastapi.staticfiles import StaticFiles
 from src.barber.routes import router as barber_router
