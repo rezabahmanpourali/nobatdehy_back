@@ -6,6 +6,8 @@ from src.hair_models.models import HairModel
 
 from typing import Optional
 from src.barber_shop.models import BarberShop,BarberShopType
+
+
 def create_barbershop(db: Session, barber_shop: schemas.BarberShopCreateSchema):
     location_data = barber_shop.location
     db_location = None
@@ -54,16 +56,38 @@ def update_barbershop(db: Session, barber_shop_id: int, barber_shop: schemas.Bar
     return db_barbershop
 
 
-def get_barbershops(db: Session, skip: int, limit: int, shop_type: Optional[str] = None):
+def get_barbershops(
+    db: Session,
+    skip: int,
+    limit: int,
+    shop_type: Optional[str] = None,
+    min_price: Optional[float] = None,
+    max_price: Optional[float] = None,
+):
     query = db.query(models.BarberShop)
     if shop_type:
-        query = query.filter(BarberShop.shop_type == BarberShopType(shop_type).value) 
+        query = query.filter(models.BarberShop.shop_type == models.BarberShopType(shop_type).value)
+    
+    if min_price is not None or max_price is not None:
+        query = query.join(models.BarberHairModel)
+
+        if min_price is not None:
+            query = query.filter(models.BarberHairModel.price >= min_price)
+        if max_price is not None:
+            query = query.filter(models.BarberHairModel.price <= max_price)
+
+        query = query.distinct() 
+
+    datas = query.offset(skip).limit(limit).all()
+    for data in datas:
+        print(data.price)
+
     return query.offset(skip).limit(limit).all()
 
 def get_barbershop_by_id(db: Session, barber_shop_id: int):
     return (
         db.query(models.BarberShop)
-        .options(joinedload(models.BarberShop.location))
+        .options(joinedload(models.BarbesrShop.location))
         .filter(models.BarberShop.id == barber_shop_id)
         .first()
     )
@@ -88,12 +112,15 @@ def add_image_to_barbershop(db: Session, barber_shop_id: int, image: schemas.Ima
 def get_images_by_barbershop(db: Session, barber_shop_id: int):
     return db.query(models.Image).filter(models.Image.barber_shop_id == barber_shop_id).all()
 
+
 def create_barber_hair_model(db: Session, barber_hair_model: schemas.BarberHairModelCreateSchema):
     db_barber_hair_model = models.BarberHairModel(**barber_hair_model.dict())
     db.add(db_barber_hair_model)
     db.commit()
     db.refresh(db_barber_hair_model)
     return db_barber_hair_model
+
+
 def get_barber_hair_models(db: Session, barber_shop_id: int):
     return (
         db.query(models.BarberHairModel)

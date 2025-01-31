@@ -1,6 +1,6 @@
 # src/barber_shop/routes.py
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from src.barber_shop.enums import BarberShopType
@@ -39,13 +39,17 @@ def read_barbershops(
     skip: int = 0,
     limit: int = 10,
     shop_type: Optional[BarberShopType] = None,
+    min_price: Optional[float]=None,
+    max_price: Optional[float] = None,
     db: Session = Depends(get_db),
 ):
     return crud.get_barbershops(
         db=db, 
         skip=skip, 
         limit=limit, 
-        shop_type=shop_type.value if shop_type else None
+        shop_type=shop_type.value if shop_type else None,
+        min_price=min_price,
+        max_price=max_price
     )
 
 @router.get("/barbershops/{barber_shop_id}", response_model=BarberShopSchema)
