@@ -2,15 +2,17 @@ from pydantic import BaseModel
 from typing import Optional
 
 class CustomerBase(BaseModel):
-    name: str
-    lastn: str
+    name:  Optional[str] = None
+    lastn:  Optional[str] = None
     phone: str
     face_form: Optional[str] = None  # این فیلد اختیاری شد
     hair_form: Optional[str] = None  # این فیلد اختیاری شد
     ryecolor: Optional[str] = None  # این فیلد اختیاری شد
     like_hair: Optional[str] = None  # این فیلد اختیاری شد
-    password: str
+    password:  Optional[str] = None
 
+class CustomerOtp(BaseModel):
+    phone:str
 class CustomerCreate(CustomerBase):
     pass
 

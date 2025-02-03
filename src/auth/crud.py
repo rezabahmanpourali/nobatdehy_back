@@ -1,7 +1,35 @@
 from sqlalchemy.orm import Session
-from src.auth.model import Customer, Address
+from src.auth.model import Customer, Address,OtpStore
 from src.auth.schemas import CustomerCreate, CustomerUpdate, AddressCreate
+import otp
 
+def generate_and_store_otp(phone: str, db: Session):
+    otp = send_otp(phone) 
+
+    if not otp:
+        raise HTTPException(status_code=400, detail={"message": "OTP could not be generated or sent."})  
+
+    expires_at = datetime.utcnow() + timedelta(minutes=2) 
+    otp_entry = db.query(OtpStore).filter(OtpStore.phone == phone).first()
+
+    if otp_entry:
+       if otp_entry.expires_at > datetime.utcnow():
+           return otp_entry.otp
+       
+       otp_entry.otp = otp
+       otp_entry.expires_at = expires_at
+    else:
+       otp_entry = OtpStore(phone=phone, otp=otp, expires_at=expires_at)
+       db.add(otp_entry)
+    db.commit()
+    return otp
+
+def verify_otp(phone: str, otp: int, db: Session):
+    otp_entry = db.query(OtpStore).filter(OtpStore.phone == phone, OtpStore.otp == otp).first()
+    
+    if otp_entry and otp_entry.expires_at > datetime.utcnow():
+        return True  
+    return False  
 def create_customer(db: Session, customer_data: CustomerCreate):
     existing_customer = db.query(Customer).filter(Customer.phone == customer_data.phone).first()
     if existing_customer:
@@ -12,7 +40,6 @@ def create_customer(db: Session, customer_data: CustomerCreate):
     db.commit()
     db.refresh(new_customer)
     return new_customer
-
 def get_customers(db: Session, skip: int = 0, limit: int = 10):
     return db.query(Customer).offset(skip).limit(limit).all()
 

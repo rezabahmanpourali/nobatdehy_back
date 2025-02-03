@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, ForeignKey,Integer, DateTime
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -29,3 +29,12 @@ class Address(Base):
     # ارتباط با مدل Customer
     
     customer = relationship("Customer", back_populates="addresses")
+from datetime import datetime, timedelta
+
+class OtpStore(Base):
+    __tablename__ = "otp_store"
+
+    id = Column(Integer, primary_key=True, index=True)
+    phone = Column(String, unique=True, index=True)
+    otp = Column(Integer, nullable=False)
+    expires_at = Column(DateTime, nullable=False, default=lambda: datetime.utcnow() + timedelta(minutes=2))

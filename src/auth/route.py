@@ -5,27 +5,30 @@ from src.auth import crud
 from src.auth.schemas import CustomerCreate, CustomerUpdate, CustomerResponse, AddressCreate, AddressResponse
 
 router = APIRouter()
-import random
+@router.post("/customers/otp/")
+def send_otp(phone: str, db: Session = Depends(get_db)):
+    otp = crud.generate_and_store_otp(phone, db)
+    return {"message": "OTP sent successfully"}
 
-@router.get("/customers/otp/")
-def generate_otp():
-    otp = random.randint(10000, 99999)  
-    return {"code": otp}
-
-@router.post("/customers/create/", response_model=CustomerResponse)
-def create_customer(customer_data: CustomerCreate, db: Session = Depends(get_db)):
-    customer = crud.create_customer(db, customer_data)
+@router.post("/customers/verify/")
+def verify_otp(phone: str, otp: int, db: Session = Depends(get_db)):
+    is_valid = crud.verify_otp(phone, otp, db)
+    
+    if not is_valid:
+        raise HTTPException(status_code=400, detail="Invalid or expired OTP")
+    
+    customer = crud.get_customer_phone(db, phone)
     if not customer:
-        raise HTTPException(status_code=400, detail="This phone number is already registered")
-    return customer
+        customer = crud.create_customer(db, {"phone": phone})
 
+    return {"message": "OTP verified successfully", "customer": customer}
 @router.get("/customers/", response_model=list[CustomerResponse])
 def read_customers(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
     return crud.get_customers(db, skip, limit)
 
 @router.get("/customers/login/{phone}", response_model=CustomerResponse)
 def read_customer_by_phone(phone: str, db: Session = Depends(get_db)):
-    customer = crud.get_customer_by_phone(db, phone)
+    customer = crud.get_customer_phone(db, phone)
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
     return customer
