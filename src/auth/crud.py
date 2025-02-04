@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from src.auth.model import Customer, Address,OtpStore
 from src.auth.schemas import CustomerCreate, CustomerUpdate, AddressCreate
-import otp
+from src.auth import otp
 
 def generate_and_store_otp(phone: str, db: Session):
     otp = send_otp(phone) 
