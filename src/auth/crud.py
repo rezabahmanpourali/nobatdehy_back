@@ -44,7 +44,12 @@ def get_customers(db: Session, skip: int = 0, limit: int = 10):
     return db.query(Customer).offset(skip).limit(limit).all()
 
 def get_customer_phone(db: Session, phone: str):
-    return db.query(Customer).filter(Customer.phone == phone).first()
+  customer = db.query(Customer).filter(Customer.phone == phone).first()
+    if customer:
+        addresses = db.query(Address).filter(Address.customer_id == customer.id).all()
+        return customer, addresses
+    return None, None
+
 
 def update_customer(db: Session, customer_id: int, customer_data: CustomerUpdate):
     customer = db.query(Customer).filter(Customer.id == customer_id).first()
