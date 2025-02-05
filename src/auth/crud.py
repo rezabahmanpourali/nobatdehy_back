@@ -3,6 +3,7 @@ from src.auth.model import Customer, Address,OtpStore
 from src.auth.schemas import CustomerCreate, CustomerUpdate, AddressCreate
 from src.auth import otp
 from datetime import datetime, timedelta
+from fastapi import HTTPException
 
 def generate_and_store_otp(phone: str, db: Session):
     generated_otp = otp.send_otp(phone)  # تغییر نام متغیر به generated_otp
