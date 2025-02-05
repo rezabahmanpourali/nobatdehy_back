@@ -2,11 +2,12 @@ from sqlalchemy.orm import Session
 from src.auth.model import Customer, Address,OtpStore
 from src.auth.schemas import CustomerCreate, CustomerUpdate, AddressCreate
 from src.auth import otp
+from datetime import datetime, timedelta
 
 def generate_and_store_otp(phone: str, db: Session):
-    otp = otp.send_otp(phone) 
+    generated_otp = otp.send_otp(phone)  # تغییر نام متغیر به generated_otp
 
-    if not otp:
+    if not generated_otp:
         raise HTTPException(status_code=400, detail={"message": "OTP could not be generated or sent."})  
 
     expires_at = datetime.utcnow() + timedelta(minutes=2) 
@@ -16,13 +17,14 @@ def generate_and_store_otp(phone: str, db: Session):
        if otp_entry.expires_at > datetime.utcnow():
            return otp_entry.otp
        
-       otp_entry.otp = otp
+       otp_entry.otp = generated_otp
        otp_entry.expires_at = expires_at
     else:
-       otp_entry = OtpStore(phone=phone, otp=otp, expires_at=expires_at)
+       otp_entry = OtpStore(phone=phone, otp=generated_otp, expires_at=expires_at)
        db.add(otp_entry)
     db.commit()
-    return otp
+    return generated_otp  # استفاده از نام جدید
+
 
 def verify_otp(phone: str, otp: int, db: Session):
     otp_entry = db.query(OtpStore).filter(OtpStore.phone == phone, OtpStore.otp == otp).first()
