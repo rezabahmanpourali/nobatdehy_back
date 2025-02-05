@@ -36,5 +36,5 @@ class OtpStore(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     phone = Column(String, unique=True, index=True)
-    otp = Column(Integer, nullable=False)
+    otp = Column(String, nullable=False)
     expires_at = Column(DateTime, nullable=False, default=lambda: datetime.utcnow() + timedelta(minutes=2))
