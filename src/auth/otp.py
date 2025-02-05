@@ -17,7 +17,7 @@ def send_otp(phone):
  if response.status_code == 200:
       json_response = response.json()
       status = json_response.get("Status")
-      otp = json_response.get("Code")
-      return status, otp
+      generated_otp = json_response.get("Code")
+      return generated_otp
  else:
-      return None, None 
+      return None 
