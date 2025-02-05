@@ -4,7 +4,7 @@ from src.auth.schemas import CustomerCreate, CustomerUpdate, AddressCreate
 from src.auth import otp
 
 def generate_and_store_otp(phone: str, db: Session):
-    otp = send_otp(phone) 
+    otp = otp.send_otp(phone) 
 
     if not otp:
         raise HTTPException(status_code=400, detail={"message": "OTP could not be generated or sent."})  
