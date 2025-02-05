@@ -48,7 +48,7 @@ def get_customer_phone(db: Session, phone: str):
   if customer:
         addresses = db.query(Address).filter(Address.customer_id == customer.id).all()
         return customer, addresses 
-   return None, None
+        return None, None
 
 
 def update_customer(db: Session, customer_id: int, customer_data: CustomerUpdate):
