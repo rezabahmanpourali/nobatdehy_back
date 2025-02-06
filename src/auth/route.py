@@ -16,12 +16,14 @@ def verify_otp(phone: str, otp: str, db: Session = Depends(get_db)):
     
     if not is_valid:
         raise HTTPException(status_code=400, detail="Invalid or expired OTP")
+    customer_data = CustomerCreate(phone=phone)  # این قسمت را اضافه کن
+
+    customer = crud.get_customer_phone(db, phone)
+    if customer:
+        return {"message": "User already logged in", "customer": customer}  # کاربر از قبل لاگین شده است
     
-    customer = crud.get_customer_phone(db,phone)
-    if not customer:
-        customer = crud.create_customer(db,phone)
-    
-    return {"message": "OTP verified successfully", "customer": customer}
+    customer = crud.create_customer(db, customer_data)
+    return {"message": "User created successfully", "customer": customer}  
 @router.get("/customers/", response_model=list[CustomerResponse])
 def read_customers(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
     return crud.get_customers(db, skip, limit)

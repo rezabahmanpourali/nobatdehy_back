@@ -37,7 +37,10 @@ def create_customer(db: Session, customer_data: CustomerCreate):
     existing_customer = db.query(Customer).filter(Customer.phone == customer_data.phone).first()
     if existing_customer:
         return None 
-    
+    if not customer_data.name:
+        customer_data.name = "1"
+    if not customer_data.lastn:
+        customer_data.lastn = "2"
     new_customer = Customer(**customer_data.dict())
     db.add(new_customer)
     db.commit()
