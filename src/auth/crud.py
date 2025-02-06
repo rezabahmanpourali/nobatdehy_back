@@ -27,12 +27,17 @@ def generate_and_store_otp(phone: str, db: Session):
     return generated_otp  # استفاده از نام جدید
 
 
-def verify_otp(phone: str, otp: int, db: Session):
-    otp_entry = db.query(OtpStore).filter(OtpStore.phone == phone, OtpStore.otp == otp).first()
+def verify_otp(phone: str, otp: int, db: Session = Depends(get_db)):
+    is_valid = crud.verify_otp(phone, otp, db)
     
-    if otp_entry and otp_entry.expires_at > datetime.utcnow():
-        return True  
-    return False  
+    if not is_valid:
+        raise HTTPException(status_code=400, detail="Invalid or expired OTP")
+    
+    customer = get_customer_by_phone(db, phone)
+    if not customer:
+        customer = create_customer(db, {"phone": phone})
+    
+    return {"message": "OTP verified successfully", "customer": customer}
 def create_customer(db: Session, customer_data: CustomerCreate):
     existing_customer = db.query(Customer).filter(Customer.phone == customer_data.phone).first()
     if existing_customer:
