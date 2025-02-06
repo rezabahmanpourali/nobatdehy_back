@@ -11,16 +11,16 @@ def send_otp(phone: str, db: Session = Depends(get_db)):
     return {"message": "OTP sent successfully"}
 
 @router.post("/customers/verify/")
-def verify_otp(phone: str, otp: int, db: Session = Depends(get_db)):
+def verify_otp(phone: str, otp: str, db: Session = Depends(get_db)):
     is_valid = crud.verify_otp(phone, otp, db)
     
     if not is_valid:
         raise HTTPException(status_code=400, detail="Invalid or expired OTP")
     
-    customer = crud.get_customer_phone(db, phone)
+    customer = crud.get_customer_by_phone(db, phone)
     if not customer:
-        customer = crud.create_customer(db, {"phone": phone})
-
+        customer = crud.create_customer(db,phone)
+    
     return {"message": "OTP verified successfully", "customer": customer}
 @router.get("/customers/", response_model=list[CustomerResponse])
 def read_customers(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):

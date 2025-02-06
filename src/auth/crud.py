@@ -28,16 +28,11 @@ def generate_and_store_otp(phone: str, db: Session):
 
 
 def verify_otp(phone: str, otp: int, db: Session):
-    is_valid = verify_otp(phone, otp, db)
+    otp_entry = db.query(OtpStore).filter(OtpStore.phone == phone, OtpStore.otp == otp).first()
     
-    if not is_valid:
-        raise HTTPException(status_code=400, detail={"Invalid or expired OTP"})
-    
-    customer = get_customer_by_phone(phone)
-    if not customer:
-        customer = create_customer(phone)
-    
-    return {"message": "OTP verified successfully", "customer": customer}
+    if otp_entry and otp_entry.expires_at > datetime.utcnow():
+        return True  # OTP صحیح است
+    return False  # OTP نامعتبر یا منقضی شده
 def create_customer(db: Session, customer_data: CustomerCreate):
     existing_customer = db.query(Customer).filter(Customer.phone == customer_data.phone).first()
     if existing_customer:
