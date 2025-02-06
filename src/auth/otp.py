@@ -14,10 +14,9 @@ def send_otp(phone):
  }
  
  response = requests.post(url, headers=headers, data=data)
- if response.status_code == 200:
-      json_response = response.json()
-      status = json_response.get("Status")
-      generated_otp = json_response.get("Code")
-      return generated_otp
- else:
-      return None 
+
+ json_response = response.json()
+ data_section = json_response.get("Data", {})
+ generated_otp = data_section.get("Code")
+
+ return generated_otp

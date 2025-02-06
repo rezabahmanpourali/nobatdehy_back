@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from src.auth.model import Customer, Address,OtpStore
-from src.auth.schemas import CustomerCreate, CustomerUpdate, AddressCreate
+from src.auth.schemas import CustomerCreate, CustomerUpdate, AddressCreate,AddressResponse,CustomerOtp,CustomerResponse,CustomerUpdate
 from src.auth import otp
 from datetime import datetime, timedelta
 from fastapi import HTTPException
