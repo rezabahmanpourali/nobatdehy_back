@@ -17,7 +17,7 @@ def verify_otp(phone: str, otp: str, db: Session = Depends(get_db)):
     if not is_valid:
         raise HTTPException(status_code=400, detail="Invalid or expired OTP")
     
-    customer = crud.get_customer_by_phone(db, phone)
+    customer = crud.get_customer_phone(db,phone)
     if not customer:
         customer = crud.create_customer(db,phone)
     
