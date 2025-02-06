@@ -33,9 +33,9 @@ def verify_otp(phone: str, otp: int, db: Session):
     if not is_valid:
         raise HTTPException(status_code=400, detail={"Invalid or expired OTP"})
     
-    customer = get_customer_by_phone(db, phone)
+    customer = get_customer_by_phone(phone)
     if not customer:
-        customer = create_customer(db, {"phone": phone})
+        customer = create_customer(phone)
     
     return {"message": "OTP verified successfully", "customer": customer}
 def create_customer(db: Session, customer_data: CustomerCreate):
