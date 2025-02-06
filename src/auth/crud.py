@@ -27,7 +27,7 @@ def generate_and_store_otp(phone: str, db: Session):
     return generated_otp  # استفاده از نام جدید
 
 
-def verify_otp(phone: str, otp: int, db: Session = Depends(get_db)):
+def verify_otp(phone: str, otp: int, db: Session):
     is_valid = verify_otp(phone, otp, db)
     
     if not is_valid:
