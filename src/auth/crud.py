@@ -4,7 +4,37 @@ from src.auth.schemas import CustomerCreate, CustomerUpdate, AddressCreate,Addre
 from src.auth import otp
 from datetime import datetime, timedelta
 from fastapi import HTTPException
+import jwt
+from datetime import datetime, timedelta
+from fastapi import HTTPException
 
+# کلید محرمانه برای امضای توکن (این باید بسیار امن باشد و فقط در دسترس سرور باشد)
+SECRET_KEY = "barber"
+ALGORITHM = "HS256"  # الگوریتم امضا (شما می‌توانید از الگوریتم‌های دیگر هم استفاده کنید)
+ACCESS_TOKEN_EXPIRE_MINUTES = 30  # مدت زمان اعتبار توکن
+
+# ایجاد توکن برای کاربر
+def create_access_token(phone: str):
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode = {"sub": phone, "exp": expire}
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+# اعتبارسنجی توکن
+def verify_access_token(token: str):
+    try:
+        # توکن را دیکود می‌کنیم
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        exp_time = datetime.utcfromtimestamp(payload["exp"])
+
+# حالا مقایسه را با استفاده از datetime انجام دهید
+        if exp_time < datetime.utcnow(): 
+            return False  # اگر توکن منقضی شده باشد False برمی‌گرداند
+        
+        return True  # اگر همه چیز صحیح باشد، True برمی‌گرداند
+    
+    except jwt.PyJWTError:
+        return False  # در صورت بروز خطا، False برمی‌گرداند
 def generate_and_store_otp(phone: str, db: Session):
     generated_otp = otp.send_otp(phone)  # تغییر نام متغیر به generated_otp
 
@@ -50,11 +80,12 @@ def get_customers(db: Session, skip: int = 0, limit: int = 10):
     return db.query(Customer).offset(skip).limit(limit).all()
 
 def get_customer_phone(db: Session, phone: str):
-  customer = db.query(Customer).filter(Customer.phone == phone).first()
-  if customer:
+    customer = db.query(Customer).filter(Customer.phone == phone).first()
+    if customer:
         addresses = db.query(Address).filter(Address.customer_id == customer.id).all()
-        return customer, addresses 
-        return None, None
+        return customer, addresses
+    return None, None
+
 
 
 def update_customer(db: Session, customer_id: int, customer_data: CustomerUpdate):

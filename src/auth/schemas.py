@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional,List
 
 class CustomerBase(BaseModel):
     name:  Optional[str] = None
@@ -36,3 +36,6 @@ class AddressResponse(AddressBase):
     customer_id: int
     class Config:
         from_attributes = True
+class CustomerWithAddressesResponse(BaseModel):
+    customer: CustomerResponse
+    addresses: List[AddressResponse] = []
