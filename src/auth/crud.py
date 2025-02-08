@@ -8,24 +8,24 @@ import jwt
 from datetime import datetime, timedelta
 from fastapi import HTTPException
 
-# کلید محرمانه برای امضای توکن (این باید بسیار امن باشد و فقط در دسترس سرور باشد)
 SECRET_KEY = "barber"
-ALGORITHM = "HS256"  # الگوریتم امضا (شما می‌توانید از الگوریتم‌های دیگر هم استفاده کنید)
+ALGORITHM = "HS256"  
 ACCESS_TOKEN_EXPIRE_MINUTES = 30  # مدت زمان اعتبار توکن
 
 # ایجاد توکن برای کاربر
-def create_access_token(phone: str):
+def create_access_token(id: str):
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode = {"sub": phone, "exp": expire}
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
 # اعتبارسنجی توکن
-def verify_access_token(token: str):
+def verify_access_token(token: str,customer_id:str):
     try:
         # توکن را دیکود می‌کنیم
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         exp_time = datetime.utcfromtimestamp(payload["exp"])
+        ids =(payload["sub"])
 
 # حالا مقایسه را با استفاده از datetime انجام دهید
         if exp_time < datetime.utcnow(): 
@@ -67,6 +67,7 @@ def create_customer(db: Session, customer_data: CustomerCreate):
     existing_customer = db.query(Customer).filter(Customer.phone == customer_data.phone).first()
     if existing_customer:
         return None 
+        #یادآوری تغییر
     if not customer_data.name:
         customer_data.name = "1"
     if not customer_data.lastn:
