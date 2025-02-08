@@ -2,41 +2,43 @@ from sqlalchemy.orm import Session
 from src.auth.model import Customer, Address,OtpStore
 from src.auth.schemas import CustomerCreate, CustomerUpdate, AddressCreate,AddressResponse,CustomerOtp,CustomerResponse,CustomerUpdate
 from src.auth import otp
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta,timezone
 from fastapi import HTTPException
 import jwt
-from datetime import datetime, timedelta
 from fastapi import HTTPException
 
 SECRET_KEY = "barber"
 ALGORITHM = "HS256"  
-ACCESS_TOKEN_EXPIRE_MINUTES = 30  # مدت زمان اعتبار توکن
+ACCESS_TOKEN_EXPIRE_MINUTES = 10  # مدت زمان اعتبار توکن
 
 # ایجاد توکن برای کاربر
-def create_access_token(id: str):
+def create_access_token(id: int):
+    ids=str(id)
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode = {"sub": phone, "exp": expire}
+    to_encode = {"sub": ids, "exp": expire}
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-# اعتبارسنجی توکن
-def verify_access_token(token: str,customer_id:str):
-    try:
-        # توکن را دیکود می‌کنیم
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        exp_time = datetime.utcfromtimestamp(payload["exp"])
-        ids =(payload["sub"])
+def refresh_token(token:str):
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
 
-# حالا مقایسه را با استفاده از datetime انجام دهید
-        if exp_time < datetime.utcnow(): 
-            return False  # اگر توکن منقضی شده باشد False برمی‌گرداند
+    user_id = (payload["sub"]) 
+    return user_id
+# اعتبارسنجی توکن
+def verify_access_token(token: str, customer_id: int):
+        # دیکود کردن توکن
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         
-        return True  # اگر همه چیز صحیح باشد، True برمی‌گرداند
+        exp_time = datetime.utcfromtimestamp(payload["exp"]).replace(tzinfo=timezone.utc)
+        user_id = (payload["sub"]) 
+
+        if exp_time < datetime.now(timezone.utc) or str(user_id) != str(customer_id):
+            return False  
+        
+        return True 
     
-    except jwt.PyJWTError:
-        return False  # در صورت بروز خطا، False برمی‌گرداند
 def generate_and_store_otp(phone: str, db: Session):
-    generated_otp = otp.send_otp(phone)  # تغییر نام متغیر به generated_otp
+    generated_otp = otp.send_otp(phone)  
 
     if not generated_otp:
         raise HTTPException(status_code=400, detail={"message": "OTP could not be generated or sent."})  
