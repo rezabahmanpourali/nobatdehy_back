@@ -43,7 +43,7 @@ def generate_and_store_otp(phone: str, db: Session):
     if not generated_otp:
         raise HTTPException(status_code=400, detail={"message": "OTP could not be generated or sent."})  
 
-    expires_at = datetime.utcnow() + timedelta(minutes=2) 
+    expires_at = datetime.utcnow() + timedelta(minutes=180) 
     otp_entry = db.query(OtpStore).filter(OtpStore.phone == phone).first()
 
     if otp_entry:
