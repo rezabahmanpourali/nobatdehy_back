@@ -17,11 +17,11 @@ def verify_otp(phone: str, otp: str, db: Session = Depends(get_db)):
     if not is_valid:
         raise HTTPException(status_code=400, detail="Invalid or expired OTP")
     customer_data = CustomerCreate(phone=phone)  
-    customer, _ = crud.get_customer_phone(db, phone)
+    customer,addresses = crud.get_customer_phone(db, phone)
 
     if customer:
         token = crud.create_access_token(customer.id)
-        return {"message": "User already logged in", "data": customer, "token": token} 
+        return {"message": "User already logged in", "data": customer,"addresses":addresses, "token": token} 
     
     customer = crud.create_customer(db, customer_data)
     token = crud.create_access_token(customer.id)
