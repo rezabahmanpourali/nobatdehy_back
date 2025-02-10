@@ -25,17 +25,16 @@ def refresh_token(token:str):
     user_id = (payload["sub"]) 
     return user_id
 # اعتبارسنجی توکن
-def verify_access_token(token: str, customer_id: int):
+def verify_access_token(token: str):
         # دیکود کردن توکن
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         
         exp_time = datetime.utcfromtimestamp(payload["exp"]).replace(tzinfo=timezone.utc)
         user_id = (payload["sub"]) 
 
-        if exp_time < datetime.now(timezone.utc) or str(user_id) != str(customer_id):
+        if exp_time < datetime.now(timezone.utc):
             return False  
-        
-        return True 
+        return user_id 
     
 def generate_and_store_otp(phone: str, db: Session):
     generated_otp = otp.send_otp(phone)  
@@ -100,11 +99,14 @@ def update_customer(db: Session, customer_id: int, customer_data: CustomerUpdate
     customer = db.query(Customer).filter(Customer.id == customer_id).first()
     if not customer:
         return None
+    update_data = customer_data.dict(exclude={"phone"})  # حذف phone_number از داده‌های ورودی
 
-    for key, value in customer_data.dict().items():
+    for key, value in update_data.items():
         setattr(customer, key, value)
 
     db.commit()
+    db.refresh(customer)
+
     return customer
 
 def delete_customer(db: Session, customer_id: int):

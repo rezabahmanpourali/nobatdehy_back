@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException,Header
 from sqlalchemy.orm import Session
 from database import get_db
 from src.auth import crud
 from src.auth.schemas import CustomerCreate, CustomerUpdate, CustomerResponse, AddressCreate, AddressResponse,CustomerWithAddressesResponse
 
 router = APIRouter()
+
 @router.post("/customers/otp/")
 def send_otp(phone: str, db: Session = Depends(get_db)):
     otp = crud.generate_and_store_otp(phone, db)
@@ -43,45 +44,52 @@ def read_customer_by_phone( phone: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Customer not found")
     
     return {"customer": customer, "addresses": addresses}
-@router.get("/customers/data/{token}/{customer_id}", response_model=CustomerWithAddressesResponse)
-def read_customer_by_phone(a_token: str, id: str, db: Session = Depends(get_db)):
-    status = crud.verify_access_token(a_token,id)
+@router.get("/customers/data/", response_model=CustomerWithAddressesResponse)
+def read_customer_by_phone( db: Session = Depends(get_db),authorization: str = Header(None)):
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization token is missing")
+    status = crud.verify_access_token(authorization)
     if not status:
         raise HTTPException(status_code=401, detail={"message": "Invalid or expired Token"})
-    customer, addresses = crud.get_customer_id(db, id)
+    customer, addresses = crud.get_customer_id(db, status)
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
     return {"customer": customer, "addresses": addresses}
-@router.put("/customers/edit/{token}/{customer_id}/", response_model=CustomerResponse)
-def update_customer(a_token: str, customer_id: str, customer_data: CustomerUpdate, db: Session = Depends(get_db)):
-    status = crud.verify_access_token(a_token,customer_id)
+@router.put("/customers/edit/", response_model=CustomerResponse)
+def update_customer(customer_data: CustomerUpdate, db: Session = Depends(get_db),authorization: str = Header(None)):
+    if not authorization:
+     raise HTTPException(status_code=401, detail="Authorization token is missing")
+    status = crud.verify_access_token(authorization)
     if not status:
         raise HTTPException(status_code=401, detail={"message": "Invalid or expired Token"})
     
-    customer = crud.update_customer(db, customer_id, customer_data)
+    customer = crud.update_customer(db, status, customer_data)
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
     
     return customer
 
-@router.delete("/customers/deleted/{token}/{customer_id}/")
-def delete_customer(a_token: str, customer_id: str, db: Session = Depends(get_db)):
-    status = crud.verify_access_token(a_token,customer_id)
+@router.delete("/customers/deleted/")
+def delete_customer(db: Session = Depends(get_db),authorization: str = Header(None)):
+    if not authorization:
+     raise HTTPException(status_code=401, detail="Authorization token is missing")
+    status = crud.verify_access_token(authorization)
     if not status:
         raise HTTPException(status_code=401, detail={"message": "Invalid or expired Token"})
-    
-    if not crud.delete_customer(db, customer_id):
+    if not crud.delete_customer(db, status):
         raise HTTPException(status_code=404, detail="Customer not found")
     
     return {"message": "Customer and associated addresses successfully deleted"}
 
-@router.post("/customers/{token}/{customer_id}/addresses/", response_model=AddressResponse)
-def add_address(a_token: str, customer_id: str, address_data: AddressCreate, db: Session = Depends(get_db)):
-    status = crud.verify_access_token(a_token,customer_id)
+@router.post("/customers//addresses/", response_model=AddressResponse)
+def add_address(address_data: AddressCreate, db: Session = Depends(get_db),authorization: str = Header(None)):
+    if not authorization:
+     raise HTTPException(status_code=401, detail="Authorization token is missing")
+    status = crud.verify_access_token(authorization)
     if not status:
         raise HTTPException(status_code=401, detail={"message": "Invalid or expired Token"})
     
-    address = crud.create_address(db, customer_id, address_data)
+    address = crud.create_address(db, status, address_data)
     if not address:
         raise HTTPException(status_code=404, detail="Customer not found")
     

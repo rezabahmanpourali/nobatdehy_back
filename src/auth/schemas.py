@@ -17,7 +17,7 @@ class CustomerCreate(CustomerBase):
     pass
 
 class CustomerUpdate(CustomerBase):
-    pass
+     phone:Optional[str] = None
 
 class CustomerResponse(CustomerBase):
     id: int
