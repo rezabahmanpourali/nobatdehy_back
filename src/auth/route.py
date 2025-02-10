@@ -21,7 +21,7 @@ def verify_otp(phone: str, otp: str, db: Session = Depends(get_db)):
 
     if customer:
         token = crud.create_access_token(customer.id)
-        return {"message": "User already logged in", "data": customer,"addresses":addresses, "token": token} 
+        return {"message": "User already logged in", "data": {"customer": customer,"addresses": addresses},"token": token} 
     
     customer = crud.create_customer(db, customer_data)
     token = crud.create_access_token(customer.id)
@@ -43,7 +43,15 @@ def read_customer_by_phone( phone: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Customer not found")
     
     return {"customer": customer, "addresses": addresses}
-
+@router.get("/customers/data/{token}/{customer_id}", response_model=CustomerWithAddressesResponse)
+def read_customer_by_phone(a_token: str, id: str, db: Session = Depends(get_db)):
+    status = crud.verify_access_token(a_token,id)
+    if not status:
+        raise HTTPException(status_code=401, detail={"message": "Invalid or expired Token"})
+    customer, addresses = crud.get_customer_id(db, id)
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    return {"customer": customer, "addresses": addresses}
 @router.put("/customers/edit/{token}/{customer_id}/", response_model=CustomerResponse)
 def update_customer(a_token: str, customer_id: str, customer_data: CustomerUpdate, db: Session = Depends(get_db)):
     status = crud.verify_access_token(a_token,customer_id)
