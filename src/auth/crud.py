@@ -9,7 +9,7 @@ from fastapi import HTTPException
 
 SECRET_KEY = "barber"
 ALGORITHM = "HS256"  
-ACCESS_TOKEN_EXPIRE_MINUTES = 10  # مدت زمان اعتبار توکن
+ACCESS_TOKEN_EXPIRE_MINUTES = 5  # مدت زمان اعتبار توکن
 
 # ایجاد توکن برای کاربر
 def create_access_token(id: int):
@@ -20,22 +20,20 @@ def create_access_token(id: int):
     return encoded_jwt
 
 def refresh_token(token:str):
-    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM],options={"verify_exp": False})
 
     user_id = (payload["sub"]) 
     return user_id
 # اعتبارسنجی توکن
 def verify_access_token(token: str):
+    try:
         # دیکود کردن توکن
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         
-        exp_time = datetime.utcfromtimestamp(payload["exp"]).replace(tzinfo=timezone.utc)
-        user_id = (payload["sub"]) 
-
-        if exp_time < datetime.now(timezone.utc):
-            return False  
-        return user_id 
-    
+        user_id = payload["sub"]
+        return user_id  
+    except jwt.ExpiredSignatureError:
+        return False  # توکن منقضی شده است
 def generate_and_store_otp(phone: str, db: Session):
     generated_otp = otp.send_otp(phone)  
 
@@ -68,11 +66,6 @@ def create_customer(db: Session, customer_data: CustomerCreate):
     existing_customer = db.query(Customer).filter(Customer.phone == customer_data.phone).first()
     if existing_customer:
         return None 
-        #یادآوری تغییر
-    if not customer_data.name:
-        customer_data.name = "1"
-    if not customer_data.lastn:
-        customer_data.lastn = "2"
     new_customer = Customer(**customer_data.dict())
     db.add(new_customer)
     db.commit()
@@ -99,10 +92,11 @@ def update_customer(db: Session, customer_id: int, customer_data: CustomerUpdate
     customer = db.query(Customer).filter(Customer.id == customer_id).first()
     if not customer:
         return None
-    update_data = customer_data.dict(exclude={"phone"})  # حذف phone_number از داده‌های ورودی
+    update_data = customer_data.dict(exclude={"phone"}, exclude_unset=True)
 
     for key, value in update_data.items():
-        setattr(customer, key, value)
+        if value is not None: 
+            setattr(customer, key, value)
 
     db.commit()
     db.refresh(customer)

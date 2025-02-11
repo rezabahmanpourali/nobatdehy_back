@@ -44,8 +44,8 @@ def read_customer_by_phone( phone: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Customer not found")
     
     return {"customer": customer, "addresses": addresses}
-@router.get("/customers/data/", response_model=CustomerWithAddressesResponse)
-def read_customer_by_phone( db: Session = Depends(get_db),authorization: str = Header(None)):
+@router.get("/customers/data/{authorization}", response_model=CustomerWithAddressesResponse)
+def read_customer_by_phone(authorization: str, db: Session = Depends(get_db)):
     if not authorization:
         raise HTTPException(status_code=401, detail="Authorization token is missing")
     status = crud.verify_access_token(authorization)
@@ -68,9 +68,8 @@ def update_customer(customer_data: CustomerUpdate, db: Session = Depends(get_db)
         raise HTTPException(status_code=404, detail="Customer not found")
     
     return customer
-
-@router.delete("/customers/deleted/")
-def delete_customer(db: Session = Depends(get_db),authorization: str = Header(None)):
+@router.delete("/customers/deleted/{authorization}")
+def delete_customer( authorization: str,db: Session = Depends(get_db)):
     if not authorization:
      raise HTTPException(status_code=401, detail="Authorization token is missing")
     status = crud.verify_access_token(authorization)
@@ -81,7 +80,7 @@ def delete_customer(db: Session = Depends(get_db),authorization: str = Header(No
     
     return {"message": "Customer and associated addresses successfully deleted"}
 
-@router.post("/customers//addresses/", response_model=AddressResponse)
+@router.post("/customers/addresses/", response_model=AddressResponse)
 def add_address(address_data: AddressCreate, db: Session = Depends(get_db),authorization: str = Header(None)):
     if not authorization:
      raise HTTPException(status_code=401, detail="Authorization token is missing")

@@ -16,8 +16,14 @@ class CustomerOtp(BaseModel):
 class CustomerCreate(CustomerBase):
     pass
 
-class CustomerUpdate(CustomerBase):
-     phone:Optional[str] = None
+class CustomerUpdate(BaseModel):
+    name:  Optional[str] = None
+    lastn:  Optional[str] = None
+    face_form: Optional[str] = None  # این فیلد اختیاری شد
+    hair_form: Optional[str] = None  # این فیلد اختیاری شد
+    ryecolor: Optional[str] = None  # این فیلد اختیاری شد
+    like_hair: Optional[str] = None  # این فیلد اختیاری شد
+    password:  Optional[str] = None
 
 class CustomerResponse(CustomerBase):
     id: int
