@@ -6,10 +6,11 @@ from datetime import datetime, timedelta,timezone
 from fastapi import HTTPException
 import jwt
 from fastapi import HTTPException
+from jwt import ExpiredSignatureError, DecodeError, InvalidTokenError
 
 SECRET_KEY = "barber"
 ALGORITHM = "HS256"  
-ACCESS_TOKEN_EXPIRE_MINUTES = 5  # مدت زمان اعتبار توکن
+ACCESS_TOKEN_EXPIRE_MINUTES = 10  # مدت زمان اعتبار توکن
 
 # ایجاد توکن برای کاربر
 def create_access_token(id: int):
@@ -30,10 +31,16 @@ def verify_access_token(token: str):
         # دیکود کردن توکن
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         
+        # بررسی وجود `sub` در payload
+        if "sub" not in payload:
+            raise DecodeError("Token payload missing 'sub' field")
+        
         user_id = payload["sub"]
         return user_id  
-    except jwt.ExpiredSignatureError:
+    except ExpiredSignatureError:
         return False  # توکن منقضی شده است
+    except (DecodeError, InvalidTokenError):
+        return None  # توکن نامعتبر است
 def generate_and_store_otp(phone: str, db: Session):
     generated_otp = otp.send_otp(phone)  
 
