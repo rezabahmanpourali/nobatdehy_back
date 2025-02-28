@@ -5,42 +5,61 @@ from src.auth import otp
 from datetime import datetime, timedelta,timezone
 from fastapi import HTTPException
 import jwt
-from fastapi import HTTPException
-from jwt import ExpiredSignatureError, DecodeError, InvalidTokenError
-
+from jwt import ExpiredSignatureError, DecodeError
+from jwt.exceptions import InvalidTokenError
 SECRET_KEY = "barber"
 ALGORITHM = "HS256"  
-ACCESS_TOKEN_EXPIRE_MINUTES = 10  # مدت زمان اعتبار توکن
-
+ACCESS_TOKEN_EXPIRE_MINUTES = 3  
+REFRESH_TOKEN_EXPIRE_DAYS = 30 
 # ایجاد توکن برای کاربر
-def create_access_token(id: int):
-    ids=str(id)
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode = {"sub": ids, "exp": expire}
+def create_token(data:dict,date:timedelta):
+    to_encode=data.copy()
+    expire = datetime.utcnow() + date
+    to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-def refresh_token(token:str):
-    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM],options={"verify_exp": False})
+def access_token(user_id:str):
+    return create_token({"sub":str(user_id)},timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+def refresh_token(user_id: str, db: Session):
+    token = create_token(
+        {"sub": str(user_id), "type": "refresh"},
+        timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    )
 
-    user_id = (payload["sub"]) 
-    return user_id
+    customer = db.query(Customer).filter(Customer.id == user_id).first()
+    
+    if customer:
+        customer.token = token
+        db.commit()
+        db.refresh(customer)
+    
+    return token
+
+def verify_token_refresh(token:str, db: Session):
+       customer = db.query(Customer).filter(Customer.token == token).first()
+       if customer:
+         return True
+       return False
 # اعتبارسنجی توکن
-def verify_access_token(token: str):
-    try:
+def verify_token(token: str):
         # دیکود کردن توکن
+     if token:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         
         # بررسی وجود `sub` در payload
         if "sub" not in payload:
             raise DecodeError("Token payload missing 'sub' field")
         
-        user_id = payload["sub"]
-        return user_id  
-    except ExpiredSignatureError:
-        return False  # توکن منقضی شده است
-    except (DecodeError, InvalidTokenError):
-        return None  # توکن نامعتبر است
+        return payload 
+ 
+def delete_refresh_token(db: Session, customer_id: int):
+    customer = db.query(Customer).filter(Customer.id == customer_id).first()
+    if customer:
+        customer.token = None 
+        db.commit()
+        return True
+    return False
 def generate_and_store_otp(phone: str, db: Session):
     generated_otp = otp.send_otp(phone)  
 

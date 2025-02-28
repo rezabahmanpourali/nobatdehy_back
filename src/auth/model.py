@@ -15,6 +15,7 @@ class Customer(Base):
     ryecolor=Column(Text,nullable=True)
     like_hair=Column(Text,nullable=True)
     password=Column(Text,nullable=True)
+    token=Column(Text,nullable=True)
     addresses = relationship("Address", back_populates="customer")
 
 # مدل آدرس‌ها
