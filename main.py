@@ -8,6 +8,7 @@ from src.barber_shop.routes import router as barber_shop_router
 from src.images.routes import router as image_router
 from src.hair_models.routes import router as hair_model_router
 from src.category.routes import router as category_router
+from src.sms.routes import router as sms_router
 target_metadata = Base.metadata 
 app = FastAPI()
 
@@ -32,6 +33,7 @@ app.include_router(barber_router, prefix="/barber", tags=["barber"])
 app.include_router(barber_shop_router, prefix="/barber_shop", tags=["barber_shop"])
 app.include_router(image_router, prefix="/image", tags=["image"])
 app.include_router(hair_model_router, prefix="/hair_model", tags=["hair_model"])
+app.include_router(sms_router, prefix="/sms", tags=["SMS"])
 app.include_router(category_router, prefix="/category", tags=["category"])
 
 # # main.py

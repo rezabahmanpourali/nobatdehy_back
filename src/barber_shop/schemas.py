@@ -85,6 +85,9 @@ class LocationSchema(LocationBaseSchema):
 # barber shoph
 class BarberShopBaseSchema(BaseModel):
     barber_shop_name: str
+    description: Optional[str] = None
+    address: Optional[str] = None
+    barbers_detail: Optional[str] = None
     is_active: bool = True
     shop_type: Optional[BarberShopType] = None 
 

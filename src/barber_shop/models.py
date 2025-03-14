@@ -12,6 +12,7 @@ class BarberShop(Base):
     id = Column(Integer, primary_key=True, index=True)
     barber_shop_name = Column(String, nullable=False)
     address = Column(String, nullable=True)
+    description = Column(Text, nullable=True)
     barbers_detail = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
 
