@@ -2,10 +2,11 @@
 
 from pydantic import BaseModel, Field
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, time
 from src.hair_models.schemas import HairModelSchema
 from src.category.schema import CategoryRead
 from src.barber_shop.enums import BarberShopType
+from src.barber_shop.models import DayOfWeek
 
 #comment v image
 class CommentBaseSchema(BaseModel):
@@ -80,7 +81,21 @@ class LocationSchema(LocationBaseSchema):
     class Config:
         from_attributes = True
 
+class WorkingHoursBase(BaseModel):
+    day_of_week: DayOfWeek
+    opening_time: time
+    closing_time: time
+    is_closed: bool = False
 
+class WorkingHoursCreate(WorkingHoursBase):
+    pass
+
+class WorkingHours(WorkingHoursBase):
+    id: int
+    barber_shop_id: int
+
+    class Config:
+        from_attributes = True
 
 # barber shoph
 class BarberShopBaseSchema(BaseModel):
@@ -89,18 +104,18 @@ class BarberShopBaseSchema(BaseModel):
     address: Optional[str] = None
     barbers_detail: Optional[str] = None
     is_active: bool = True
-    shop_type: Optional[BarberShopType] = None 
-
+    shop_type: Optional[BarberShopType] = None
 
 class BarberShopCreateSchema(BarberShopBaseSchema):
     location: Optional[LocationCreateSchema] = None
-
+    working_hours: Optional[List[WorkingHoursCreate]] = None
 
 class BarberShopSchema(BarberShopBaseSchema):
     id: int
     comments: List[CommentSchema] = Field(default_factory=list)
     images: List[ImageSchema] = Field(default_factory=list)
     location: Optional[LocationSchema] = None
+    working_hours: List[WorkingHours] = Field(default_factory=list)
 
     class Config:
         from_attributes = True

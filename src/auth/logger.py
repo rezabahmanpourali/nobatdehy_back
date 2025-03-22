@@ -35,17 +35,23 @@ class AuthException(HTTPException):
 def handle_auth_error(error: Exception) -> dict:
     """مدیریت خطاهای احراز هویت و تبدیل آنها به پاسخ مناسب"""
     if isinstance(error, AuthException):
-        return {
-            "status": "error",
-            "code": error.error_code,
-            "message": error.detail,
-            "timestamp": error.timestamp.isoformat()
-        }
+        raise HTTPException(
+            status_code=error.status_code,
+            detail={
+                "status": "error",
+                "code": error.error_code,
+                "message": error.detail,
+                "timestamp": error.timestamp.isoformat()
+            }
+        )
     
     logger.error(f"Unexpected error: {str(error)}")
-    return {
-        "status": "error",
-        "code": "internal_server_error",
-        "message": ERROR_MESSAGES["server_error"],
-        "timestamp": datetime.utcnow().isoformat()
-    } 
+    raise HTTPException(
+        status_code=500,
+        detail={
+            "status": "error",
+            "code": "internal_server_error",
+            "message": ERROR_MESSAGES["server_error"],
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    ) 

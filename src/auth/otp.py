@@ -1,8 +1,9 @@
 import requests
 from .logger import logger
 from fastapi import HTTPException
+from typing import Optional
 
-def send_otp(phone: str, otp_code: str = None) -> bool:
+def send_otp(phone: str, otp_code: str = None) -> Optional[str]:
     """
     ارسال OTP از طریق سرویس پیامک
     """
@@ -80,7 +81,7 @@ def send_otp(phone: str, otp_code: str = None) -> bool:
         
         logger.info(f"OTP sent successfully to {Mobile}: {generated_otp}")
         print(f"Generated OTP for {Mobile}: {generated_otp}")
-        return True
+        return generated_otp
             
     except requests.exceptions.RequestException as e:
         logger.error(f"Error sending SMS to {Mobile}: {str(e)}")

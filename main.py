@@ -21,10 +21,10 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,  
     allow_credentials=True, 
-    allow_methods=["*"],  
+    allow_methods=["*"], 
     allow_headers=["*"],
 )
-
+# PS C:\Users\reza> $env:Path = "C:\Users\reza\AppData\Local\Programs\Python\Python313-arm64;C:\Users\reza\AppData\Local\Programs\Python\Python313-arm64\Scripts;" + $env:Path
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 Base.metadata.create_all(bind=engine)
 
@@ -35,7 +35,6 @@ app.include_router(image_router, prefix="/image", tags=["image"])
 app.include_router(hair_model_router, prefix="/hair_model", tags=["hair_model"])
 app.include_router(sms_router, prefix="/sms", tags=["SMS"])
 app.include_router(category_router, prefix="/category", tags=["category"])
-
 # # main.py
 # from fastapi import FastAPI
 # from database import Base, engine

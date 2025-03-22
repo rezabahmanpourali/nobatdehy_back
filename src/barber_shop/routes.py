@@ -14,8 +14,11 @@ from src.barber_shop.schemas import (
     CommentSchema,
     ImageCreateSchema,
     ImageSchema,
+    WorkingHours,
+    WorkingHoursCreate,
 )
 from database import get_db
+from src.barber_shop import models
 
 router = APIRouter()
 
@@ -84,3 +87,35 @@ def create_barber_hair_model(barber_shop_id: int, barber_hair_model: BarberHairM
 @router.get("/barbershops/{barber_shop_id}/hair_models/", response_model=List[BarberHairModelSchema])
 def get_barber_hair_models(barber_shop_id: int, db: Session = Depends(get_db)):
     return crud.get_barber_hair_models(db=db, barber_shop_id=barber_shop_id)
+
+@router.get("/barbershops/{barber_shop_id}/working-hours/", response_model=List[WorkingHours])
+def get_working_hours(barber_shop_id: int, db: Session = Depends(get_db)):
+    db_barbershop = crud.get_barbershop_by_id(db=db, barber_shop_id=barber_shop_id)
+    if db_barbershop is None:
+        raise HTTPException(status_code=404, detail="BarberShop not found")
+    return db_barbershop.working_hours
+
+@router.put("/barbershops/{barber_shop_id}/working-hours/", response_model=List[WorkingHours])
+def update_working_hours(
+    barber_shop_id: int, 
+    working_hours: List[WorkingHoursCreate], 
+    db: Session = Depends(get_db)
+):
+    db_barbershop = crud.get_barbershop_by_id(db=db, barber_shop_id=barber_shop_id)
+    if db_barbershop is None:
+        raise HTTPException(status_code=404, detail="BarberShop not found")
+    
+    # Delete existing working hours
+    db.query(models.WorkingHours).filter(models.WorkingHours.barber_shop_id == barber_shop_id).delete()
+    
+    # Add new working hours
+    for hours in working_hours:
+        db_working_hours = models.WorkingHours(
+            **hours.dict(),
+            barber_shop_id=barber_shop_id
+        )
+        db.add(db_working_hours)
+    
+    db.commit()
+    db_barbershop = crud.get_barbershop_by_id(db=db, barber_shop_id=barber_shop_id)
+    return db_barbershop.working_hours

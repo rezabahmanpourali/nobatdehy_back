@@ -5,9 +5,67 @@ from src.barber_shop import models, schemas
 from src.hair_models.models import HairModel
 
 from typing import Optional
-from src.barber_shop.models import BarberShop,BarberShopType
+from src.barber_shop.models import BarberShop,BarberShopType, DayOfWeek
+from datetime import time
+
+def create_default_working_hours(db: Session, barber_shop_id: int):
+    default_hours = [
+        {
+            "day_of_week": DayOfWeek.MONDAY,
+            "opening_time": time(9, 0),  # 9:00 AM
+            "closing_time": time(21, 0),  # 9:00 PM
+            "is_closed": False
+        },
+        {
+            "day_of_week": DayOfWeek.TUESDAY,
+            "opening_time": time(9, 0),
+            "closing_time": time(21, 0),
+            "is_closed": False
+        },
+        {
+            "day_of_week": DayOfWeek.WEDNESDAY,
+            "opening_time": time(9, 0),
+            "closing_time": time(21, 0),
+            "is_closed": False
+        },
+        {
+            "day_of_week": DayOfWeek.THURSDAY,
+            "opening_time": time(9, 0),
+            "closing_time": time(21, 0),
+            "is_closed": False
+        },
+        {
+            "day_of_week": DayOfWeek.FRIDAY,
+            "opening_time": time(9, 0),
+            "closing_time": time(21, 0),
+            "is_closed": False
+        },
+        {
+            "day_of_week": DayOfWeek.SATURDAY,
+            "opening_time": time(9, 0),
+            "closing_time": time(21, 0),
+            "is_closed": False
+        },
+        {
+            "day_of_week": DayOfWeek.SUNDAY,
+            "opening_time": time(9, 0),
+            "closing_time": time(21, 0),
+            "is_closed": True
+        }
+    ]
+    
+    for hours in default_hours:
+        db_working_hours = models.WorkingHours(
+            barber_shop_id=barber_shop_id,
+            **hours
+        )
+        db.add(db_working_hours)
+    
+    db.commit()
+
 def create_barbershop(db: Session, barber_shop: schemas.BarberShopCreateSchema):
     location_data = barber_shop.location
+    working_hours_data = barber_shop.working_hours
     db_location = None
 
     if location_data:
@@ -17,11 +75,25 @@ def create_barbershop(db: Session, barber_shop: schemas.BarberShopCreateSchema):
         db.refresh(db_location)
 
     db_barbershop = models.BarberShop(
-        **barber_shop.dict(exclude={"location", "shop_type"}), 
+        **barber_shop.dict(exclude={"location", "shop_type", "working_hours"}), 
         shop_type=barber_shop.shop_type, 
         location_id=db_location.id if db_location else None
     )
     db.add(db_barbershop)
+    db.commit()
+    db.refresh(db_barbershop)
+
+    if working_hours_data:
+        for hours in working_hours_data:
+            db_working_hours = models.WorkingHours(
+                **hours.dict(),
+                barber_shop_id=db_barbershop.id
+            )
+            db.add(db_working_hours)
+    else:
+        # If no working hours provided, create default ones
+        create_default_working_hours(db, db_barbershop.id)
+    
     db.commit()
     db.refresh(db_barbershop)
     return db_barbershop
@@ -46,6 +118,17 @@ def update_barbershop(db: Session, barber_shop_id: int, barber_shop: schemas.Bar
                 db.commit()
                 db.refresh(db_location)
                 db_barbershop.location_id = db_location.id
+        elif key == "working_hours" and value:
+            # Delete existing working hours
+            db.query(models.WorkingHours).filter(models.WorkingHours.barber_shop_id == barber_shop_id).delete()
+            
+            # Add new working hours
+            for hours in value:
+                db_working_hours = models.WorkingHours(
+                    **hours.dict(),
+                    barber_shop_id=barber_shop_id
+                )
+                db.add(db_working_hours)
         else:
             setattr(db_barbershop, key, value)
 

@@ -83,11 +83,9 @@ def generate_and_store_otp(phone: str, db: Session) -> str:
         db.delete(existing_otp)
         db.commit()
     
-    # تولید OTP
-    generated_otp = "".join([str(random.randint(0, 9)) for _ in range(6)])
-    
-    # ارسال OTP
-    if not otp.send_otp(phone):
+    # ارسال OTP و دریافت کد تولید شده
+    generated_otp = otp.send_otp(phone)
+    if not generated_otp:
         raise AuthException(
             status_code=500,
             detail="خطا در ارسال پیامک، لطفاً دوباره تلاش کنید",

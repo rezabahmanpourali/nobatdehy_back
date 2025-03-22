@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Text, ForeignKey,Integer, DateTime
 from sqlalchemy.orm import relationship
 from database import Base
+from datetime import datetime, timedelta
 
 # مدل مشتریان
 class Customer(Base):
@@ -30,8 +31,8 @@ class Address(Base):
     # ارتباط با مدل Customer
     
     customer = relationship("Customer", back_populates="addresses")
-from datetime import datetime, timedelta
 
+# مدل OTP
 class OtpStore(Base):
     __tablename__ = "otp_store"
 

@@ -1,10 +1,32 @@
 # src/barber_shop/models.py
 
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, Float, Boolean, DateTime,Enum
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, Float, Boolean, DateTime, Enum, Time
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from database import Base
 from src.barber_shop.enums import BarberShopType
+from enum import Enum as PyEnum
+
+class DayOfWeek(PyEnum):
+    MONDAY = "monday"
+    TUESDAY = "tuesday"
+    WEDNESDAY = "wednesday"
+    THURSDAY = "thursday"
+    FRIDAY = "friday"
+    SATURDAY = "saturday"
+    SUNDAY = "sunday"
+
+class WorkingHours(Base):
+    __tablename__ = "working_hours"
+
+    id = Column(Integer, primary_key=True, index=True)
+    barber_shop_id = Column(Integer, ForeignKey("barber_shop.id"), nullable=False)
+    day_of_week = Column(Enum(DayOfWeek), nullable=False)
+    opening_time = Column(Time, nullable=False)
+    closing_time = Column(Time, nullable=False)
+    is_closed = Column(Boolean, default=False)
+
+    barber_shop = relationship("BarberShop", back_populates="working_hours")
 
 class BarberShop(Base):
     __tablename__ = "barber_shop"
@@ -23,6 +45,7 @@ class BarberShop(Base):
     images = relationship("Image", back_populates="barber_shop")
     hair_model_relations = relationship("BarberHairModel", back_populates="barber_shop")
     comments = relationship("Comment", back_populates="barber_shop")
+    working_hours = relationship("WorkingHours", back_populates="barber_shop", cascade="all, delete-orphan")
 
     shop_type = Column(Enum(BarberShopType), nullable=True)
 
@@ -38,7 +61,6 @@ class Comment(Base):
 
     barber_shop = relationship("BarberShop", back_populates="comments", uselist=False)
 
-
 class BarberHairModel(Base):
     __tablename__ = "barber_hair_model"
 
@@ -52,8 +74,6 @@ class BarberHairModel(Base):
     category = relationship("Category", back_populates="barber_hair_models") 
     barber_shop = relationship("BarberShop", back_populates="hair_model_relations")
     hair_model = relationship("HairModel", back_populates="barber_relations")
-
-
 
 class Location(Base):
     __tablename__ = "location"
