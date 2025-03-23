@@ -6,6 +6,7 @@ from sqlalchemy.orm import relationship
 from database import Base
 from src.barber_shop.enums import BarberShopType
 from enum import Enum as PyEnum
+from src.barber_shop.utils import get_address_from_coordinates
 
 class DayOfWeek(PyEnum):
     MONDAY = "monday"
@@ -81,5 +82,24 @@ class Location(Base):
     id = Column(Integer, primary_key=True, index=True)
     latitude = Column(Float, nullable=False) 
     longitude = Column(Float, nullable=False)
+    address = Column(String, nullable=True)  # آدرس متنی
+    city = Column(String, nullable=True)     # شهر
+    state = Column(String, nullable=True)    # استان
+    postal_code = Column(String, nullable=True)  # کد پستی
+    country = Column(String, nullable=True)  # کشور
 
     barber_shops = relationship("BarberShop", back_populates="location")
+
+    def update_address_from_coordinates(self):
+        """
+        به‌روزرسانی آدرس متنی با استفاده از مختصات جغرافیایی
+        """
+        address_data = get_address_from_coordinates(self.latitude, self.longitude)
+        if address_data:
+            self.address = address_data['address']
+            self.city = address_data['city']
+            self.state = address_data['state']
+            self.postal_code = address_data['postal_code']
+            self.country = address_data['country']
+
+            

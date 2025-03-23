@@ -113,8 +113,10 @@ def update_barbershop(db: Session, barber_shop_id: int, barber_shop: schemas.Bar
                     if db_location:
                         db_location.latitude = value['latitude']
                         db_location.longitude = value['longitude']
+                        db_location.update_address_from_coordinates()
                 else:
                     db_location = models.Location(latitude=value['latitude'], longitude=value['longitude'])
+                    db_location.update_address_from_coordinates()
                     db.add(db_location)
                     db.flush()
                     db_barbershop.location_id = db_location.id

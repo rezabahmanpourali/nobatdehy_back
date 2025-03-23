@@ -71,6 +71,11 @@ class BarberHairModelSchema(BaseModel):
 class LocationBaseSchema(BaseModel):
     latitude: float
     longitude: float
+    address: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    postal_code: Optional[str] = None
+    country: Optional[str] = None
 
 class LocationCreateSchema(LocationBaseSchema):
     pass
