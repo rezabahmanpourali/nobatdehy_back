@@ -100,41 +100,47 @@ def create_barbershop(db: Session, barber_shop: schemas.BarberShopCreateSchema):
 
 
 def update_barbershop(db: Session, barber_shop_id: int, barber_shop: schemas.BarberShopCreateSchema):
-    db_barbershop = db.query(models.BarberShop).filter(models.BarberShop.id == barber_shop_id).first()
-    
-    if not db_barbershop:
-        return None
+    try:
+        db_barbershop = db.query(models.BarberShop).filter(models.BarberShop.id == barber_shop_id).first()
+        
+        if not db_barbershop:
+            return None
 
-    for key, value in barber_shop.dict(exclude_unset=True).items():
-        if key == "location" and value:
-            if db_barbershop.location_id:
-                db_location = db.query(models.Location).filter(models.Location.id == db_barbershop.location_id).first()
-                if db_location:
-                    db_location.latitude = value['latitude']
-                    db_location.longitude = value['longitude']
+        for key, value in barber_shop.dict(exclude_unset=True).items():
+            if key == "location" and value:
+                if db_barbershop.location_id:
+                    db_location = db.query(models.Location).filter(models.Location.id == db_barbershop.location_id).first()
+                    if db_location:
+                        db_location.latitude = value['latitude']
+                        db_location.longitude = value['longitude']
+                else:
+                    db_location = models.Location(latitude=value['latitude'], longitude=value['longitude'])
+                    db.add(db_location)
+                    db.flush()
+                    db_barbershop.location_id = db_location.id
+            elif key == "working_hours" and value:
+                # Delete existing working hours
+                db.query(models.WorkingHours).filter(models.WorkingHours.barber_shop_id == barber_shop_id).delete()
+                
+                # Add new working hours
+                for hours in value:
+                    # Handle both Pydantic models and dictionaries
+                    hours_data = hours.dict() if hasattr(hours, 'dict') else hours
+                    db_working_hours = models.WorkingHours(
+                        **hours_data,
+                        barber_shop_id=barber_shop_id
+                    )
+                    db.add(db_working_hours)
             else:
-                db_location = models.Location(latitude=value['latitude'], longitude=value['longitude'])
-                db.add(db_location)
-                db.commit()
-                db.refresh(db_location)
-                db_barbershop.location_id = db_location.id
-        elif key == "working_hours" and value:
-            # Delete existing working hours
-            db.query(models.WorkingHours).filter(models.WorkingHours.barber_shop_id == barber_shop_id).delete()
-            
-            # Add new working hours
-            for hours in value:
-                db_working_hours = models.WorkingHours(
-                    **hours.dict(),
-                    barber_shop_id=barber_shop_id
-                )
-                db.add(db_working_hours)
-        else:
-            setattr(db_barbershop, key, value)
+                setattr(db_barbershop, key, value)
 
-    db.commit()
-    db.refresh(db_barbershop)
-    return db_barbershop
+        db.flush()
+        db.commit()
+        db.refresh(db_barbershop)
+        return db_barbershop
+    except Exception as e:
+        db.rollback()
+        raise e
 
 
 def get_barbershops(

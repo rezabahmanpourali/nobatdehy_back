@@ -194,3 +194,22 @@ def create_address(db: Session, customer_id: int, address_data: schemas.AddressC
 def get_addresses(db: Session, customer_id: int) -> List[model.Address]:
     """دریافت لیست آدرس‌های مشتری"""
     return db.query(model.Address).filter(model.Address.customer_id == customer_id).all()
+
+def delete_customer_account(db: Session, customer_id: int) -> bool:
+    """
+    حذف کامل اکانت کاربر و تمام داده‌های مرتبط با آن
+    """
+    try:
+        # حذف آدرس‌های کاربر
+        db.query(Address).filter(Address.customer_id == customer_id).delete()
+        
+        # حذف خود کاربر
+        customer = db.query(Customer).filter(Customer.id == customer_id).first()
+        if customer:
+            db.delete(customer)
+            db.commit()
+            return True
+        return False
+    except Exception as e:
+        db.rollback()
+        raise e

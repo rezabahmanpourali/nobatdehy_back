@@ -232,3 +232,16 @@ async def get_customer_addresses(
         return addresses
     except Exception as e:
         return handle_auth_error(e)
+    
+@router.delete("/customers/{customer_id}", response_model=dict)
+def delete_account(customer_id: int, db: Session = Depends(get_db)):
+    """
+    حذف کامل اکانت کاربر
+    """
+    try:
+        success = crud.delete_customer_account(db=db, customer_id=customer_id)
+        if success:
+            return {"message": "اکانت با موفقیت حذف شد"}
+        raise HTTPException(status_code=404, detail="کاربر یافت نشد")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) 
